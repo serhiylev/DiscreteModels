@@ -4,24 +4,34 @@ import java.util.Arrays;
 
 class TSP {
 
-  int N = 6;
+  private final int[][] adj;
 
-  int[] final_path = new int[N + 1];
+  private final int matrixSize;
 
-  boolean[] visited = new boolean[N];
+  private final int[] finalPath;
 
-  int final_res = Integer.MAX_VALUE;
+  private final boolean[] visited;
 
-  void copyToFinal(int[] curr_path) {
-    if (N >= 0) {
-      System.arraycopy(curr_path, 0, final_path, 0, N);
-    }
-    final_path[N] = curr_path[0];
+  private int finalResult = Integer.MAX_VALUE;
+
+
+  TSP(int[][] inputArray, int size) {
+    this.matrixSize = size;
+    this.adj = inputArray;
+    this.finalPath = new int[matrixSize + 1];
+    this.visited = new boolean[matrixSize];
   }
 
-  int firstMin(int[][] adj, int i) {
+  private void copyToFinal(int[] curr_path) {
+    if (matrixSize >= 0) {
+      System.arraycopy(curr_path, 0, finalPath, 0, matrixSize);
+    }
+    finalPath[matrixSize] = curr_path[0];
+  }
+
+  private int firstMin(int[][] adj, int i) {
     int min = Integer.MAX_VALUE;
-    for (int k = 0; k < N; k++) {
+    for (int k = 0; k < matrixSize; k++) {
       if (adj[i][k] < min && i != k) {
         min = adj[i][k];
       }
@@ -29,9 +39,9 @@ class TSP {
     return min;
   }
 
-  int secondMin(int[][] adj, int i) {
+  private int secondMin(int[][] adj, int i) {
     int first = Integer.MAX_VALUE, second = Integer.MAX_VALUE;
-    for (int j = 0; j < N; j++) {
+    for (int j = 0; j < matrixSize; j++) {
       if (i == j) {
         continue;
       }
@@ -39,29 +49,27 @@ class TSP {
       if (adj[i][j] <= first) {
         second = first;
         first = adj[i][j];
-      } else if (adj[i][j] <= second &&
-          adj[i][j] != first) {
+      } else if (adj[i][j] <= second && adj[i][j] != first) {
         second = adj[i][j];
       }
     }
     return second;
   }
 
-  void TSPRec(int adj[][], int curr_bound, int curr_weight,
-      int level, int curr_path[]) {
-    if (level == N) {
+  private void TSPRec(int[][] adj, int curr_bound, int curr_weight, int level, int[] curr_path) {
+    if (level == matrixSize) {
       if (adj[curr_path[level - 1]][curr_path[0]] != 0) {
         int curr_res = curr_weight +
             adj[curr_path[level - 1]][curr_path[0]];
-        if (curr_res < final_res) {
+        if (curr_res < finalResult) {
           copyToFinal(curr_path);
-          final_res = curr_res;
+          finalResult = curr_res;
         }
       }
       return;
     }
 
-    for (int i = 0; i < N; i++) {
+    for (int i = 0; i < matrixSize; i++) {
       if (adj[curr_path[level - 1]][i] != 0 &&
           !visited[i]) {
         int temp = curr_bound;
@@ -73,7 +81,7 @@ class TSP {
           curr_bound -= ((secondMin(adj, curr_path[level - 1]) +
               firstMin(adj, i)) / 2);
         }
-        if (curr_bound + curr_weight < final_res) {
+        if (curr_bound + curr_weight < finalResult) {
           curr_path[level] = i;
           visited[i] = true;
           TSPRec(adj, curr_bound, curr_weight, level + 1,
@@ -91,22 +99,28 @@ class TSP {
     }
   }
 
-  TSP(int[][] adj) {
-    int[] curr_path = new int[N + 1];
+  public void compute() {
+    int[] curr_path = new int[matrixSize + 1];
     int curr_bound = 0;
+
     Arrays.fill(curr_path, -1);
     Arrays.fill(visited, false);
-    for (int i = 0; i < N; i++) {
-      curr_bound += (firstMin(adj, i) +
-          secondMin(adj, i));
+
+    for (int i = 0; i < matrixSize; i++) {
+      curr_bound += (firstMin(adj, i) + secondMin(adj, i));
     }
 
-    curr_bound = (curr_bound == 1) ? curr_bound / 2 + 1 : curr_bound / 2;
+    curr_bound = (curr_bound == 1) ? 1 : curr_bound / 2;
 
     visited[0] = true;
     curr_path[0] = 0;
 
     TSPRec(adj, curr_bound, 0, 1, curr_path);
-  }
 
+    System.out.printf("Minimum cost : %d\n", finalResult);
+    System.out.print("Path Taken : ");
+    for (int i = 0; i <= matrixSize; i++) {
+      System.out.printf("%d ", finalPath[i]);
+    }
+  }
 }
